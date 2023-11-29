@@ -1,4 +1,3 @@
-From_City,To_City,Distance
 AN,BA,150
 BA,CH,80
 CH,VI,60
