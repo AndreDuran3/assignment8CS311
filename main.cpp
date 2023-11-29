@@ -12,5 +12,9 @@ int main(){
   City cities[];
   Road roads[];
   City a; 
-  counter;
+  int counter = 0;
+  collect_all_cities(cities, counter);
+  counter = 0; 
+  collect_all_roads(roads, counter);
+  cout << "program is finished" << endl;
 }
