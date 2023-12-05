@@ -5,153 +5,167 @@
 #include <unordered_map>
 #include <queue>
 #include <limits>
-using namespace std; 
-struct City {
-    string code;
-    string acronym;
-    string name;
-    int population;
-    int area;
-};
 
-struct Road {
-    string sourceCode;
-    string destinationCode;
-    int distance;
-};
+namespace std {
 
-class CityMap {
-public:
-    void loadCities(const string& filename);
-    void loadRoads(const string& filename);
-    void findShortestPath(const string& sourceCode, const string& destinationCode);
+    struct City {
+        std::string code;
+        std::string acronym;
+        std::string name;
+        int population;
+        int area;
+    };
 
-private:
-    vector<City> cities;
-    vector<Road> roads;
-    unordered_map<string, int> cityCodeIndexMap;
-};
+    struct Road {
+        std::string sourceCode;
+        std::string destinationCode;
+        int distance;
+    };
 
-void CityMap::loadCities(const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Error opening file: " << filename << endl;
-        return;
-    }
+    class CityMap {
+    public:
+        void loadCities(const std::string& filename);
+        void loadRoads(const std::string& filename);
+        void findShortestPath(const std::string& sourceCode, const std::string& destinationCode);
+        const std::vector<City>& getCities() const;
 
-    string line;
-    while (getline(file, line)) {
-        istringstream iss(line);
-        City city;
-        iss >> city.code >> city.acronym >> city.name >> city.population >> city.area;
-        cities.push_back(city);
-        cityCodeIndexMap[city.code] = cities.size() - 1;
-    }
+    private:
+        std::vector<City> cities;
+        std::vector<Road> roads;
+        std::unordered_map<std::string, int> cityCodeIndexMap;
+    };
 
-    file.close();
-}
-
-void CityMap::loadRoads(const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Error opening file: " << filename << endl;
-        return;
-    }
-
-    string line;
-    while (getline(file, line)) {
-        istringstream iss(line);
-        Road road;
-        string sourceCode, destinationCode;
-
-        // Read source and destination city codes
-        iss >> sourceCode >> destinationCode >> road.distance;
-
-        // Convert city codes to indices
-        if (cityCodeIndexMap.find(sourceCode) == cityCodeIndexMap.end() || cityCodeIndexMap.find(destinationCode) == cityCodeIndexMap.end()) {
-            cerr << "Invalid city codes in road data: " << sourceCode << " or " << destinationCode << endl;
-            continue;
+    void CityMap::loadCities(const std::string& filename) {
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Error opening file: " << filename << std::endl;
+            return;
         }
 
-        road.sourceCode = sourceCode;
-        road.destinationCode = destinationCode;
+        std::string line;
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+            City city;
+            iss >> city.code >> city.acronym >> city.name >> city.population >> city.area;
+            cities.push_back(city);
+            cityCodeIndexMap[city.code] = cities.size() - 1;
+        }
 
-        roads.push_back(road);
+        file.close();
     }
 
-    file.close();
-}
+    void CityMap::loadRoads(const std::string& filename) {
+        std::ifstream file(filename);
+        if (!file.is_open()) {
+            std::cerr << "Error opening file: " << filename << std::endl;
+            return;
+        }
 
-void CityMap::findShortestPath(const string& sourceCode, const string& destinationCode) {
-    if (cityCodeIndexMap.find(sourceCode) == cityCodeIndexMap.end() || cityCodeIndexMap.find(destinationCode) == cityCodeIndexMap.end()) {
-        cerr << "Invalid city codes." << endl;
-        return;
+        std::string line;
+        while (std::getline(file, line)) {
+            std::istringstream iss(line);
+            Road road;
+            std::string sourceCode, destinationCode;
+            iss >> sourceCode >> destinationCode >> road.distance;
+
+            if (cityCodeIndexMap.find(sourceCode) == cityCodeIndexMap.end() || cityCodeIndexMap.find(destinationCode) == cityCodeIndexMap.end()) {
+                std::cerr << "Invalid city codes in road data: " << sourceCode << " or " << destinationCode << std::endl;
+                continue;
+            }
+
+            road.sourceCode = sourceCode;
+            road.destinationCode = destinationCode;
+
+            roads.push_back(road);
+        }
+
+        file.close();
     }
 
-    int sourceIndex = cityCodeIndexMap[sourceCode];
-    int destinationIndex = cityCodeIndexMap[destinationCode];
+    void CityMap::findShortestPath(const std::string& sourceCode, const std::string& destinationCode) {
+        if (cityCodeIndexMap.find(sourceCode) == cityCodeIndexMap.end() || cityCodeIndexMap.find(destinationCode) == cityCodeIndexMap.end()) {
+            std::cerr << "Invalid city codes." << std::endl;
+            return;
+        }
 
-    vector<int> distance(cities.size(), numeric_limits<int>::max());
-    distance[sourceIndex] = 0;
+        int sourceIndex = cityCodeIndexMap[sourceCode];
+        int destinationIndex = cityCodeIndexMap[destinationCode];
 
-    priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
-    pq.push({0, sourceIndex});
+        std::vector<int> distance(cities.size(), std::numeric_limits<int>::max());
+        distance[sourceIndex] = 0;
 
-    while (!pq.empty()) {
-        int u = pq.top().second;
-        pq.pop();
+        std::priority_queue<std::pair<int, int>, std::vector<std::pair<int, int>>, std::greater<std::pair<int, int>>> pq;
+        pq.push({0, sourceIndex});
 
-        for (const Road& road : roads) {
-            if (road.sourceCode == cities[u].code) {
-                int v = cityCodeIndexMap[road.destinationCode];
-                int w = road.distance;
+        std::vector<int> parent(cities.size(), -1); // Parent array to reconstruct the path
 
-                if (distance[u] + w < distance[v]) {
-                    distance[v] = distance[u] + w;
-                    pq.push({distance[v], v});
+        while (!pq.empty()) {
+            int u = pq.top().second;
+            pq.pop();
+
+            for (const Road& road : roads) {
+                if (road.sourceCode == cities[u].code) {
+                    int v = cityCodeIndexMap[road.destinationCode];
+                    int w = road.distance;
+
+                    if (distance[u] + w < distance[v]) {
+                        distance[v] = distance[u] + w;
+                        parent[v] = u; // Track the parent to reconstruct the path
+                        pq.push({distance[v], v});
+                    }
                 }
             }
         }
-    }
 
-    if (distance[destinationIndex] == numeric_limits<int>::max()) {
-        cout << "No path found from " << sourceCode << " to " << destinationCode << endl;
-    } else {
-        cout << "The shortest distance from " << cities[sourceIndex].name << " to " << cities[destinationIndex].name
-                  << " is " << distance[destinationIndex] << endl;
+        if (distance[destinationIndex] == std::numeric_limits<int>::max()) {
+            std::cout << "No path found from " << sourceCode << " to " << destinationCode << std::endl;
+        } else {
+            std::cout << "The shortest distance from " << cities[sourceIndex].name << " to " << cities[destinationIndex].name
+                    << " is " << distance[destinationIndex] << std::endl;
 
-        cout << "Through the route: ";
-        int current = destinationIndex;
-        vector<string> route;
-        while (current != sourceIndex) {
-            route.push_back(cities[current].name);
-            current = cityCodeIndexMap[roads[current].sourceCode];
-        }
-        route.push_back(cities[sourceIndex].name);
+            std::cout << "Through the route: ";
+            std::vector<std::string> route;
 
-        for (auto it = route.rbegin(); it != route.rend(); ++it) {
-            cout << *it;
-            if (it + 1 != route.rend()) {
-                cout << "->";
+            int current = destinationIndex;
+            while (current != -1) {
+                route.push_back(cities[current].name);
+                current = parent[current];
             }
-        }
 
-        cout << endl;
+            for (auto it = route.rbegin(); it != route.rend(); ++it) {
+                std::cout << *it;
+                if (it + 1 != route.rend()) {
+                    std::cout << "->";
+                }
+            }
+
+            std::cout << std::endl;
+        }
     }
-}
+
+    const std::vector<City>& CityMap::getCities() const {
+        return cities;
+    }
+
+} // namespace std
 
 int main() {
-    CityMap cityMap;
+  cout << "Author: Jonathan Pak, Andre Duran, Max Gulart" << endl;\
+  cout << "Date: 12/4/2023" << endl;
+  cout << "CS 311 (Data Structures and Algorithms)" << endl;
+  cout << "Description : Program to find the shortest route between cities" << endl;
+  cout << endl; 
+    std::CityMap cityMap;
     cityMap.loadCities("city.txt");
     cityMap.loadRoads("road.txt");
 
-    string sourceCode, destinationCode;
-    cout << "Enter source city code: ";
-    cin >> sourceCode;
-    cout << "Enter destination city code: ";
-    cin >> destinationCode;
+    int sourceIndex, destinationIndex;
+    std::cout << "Enter source city index: ";
+    std::cin >> sourceIndex;
+    std::cout << "Enter destination city index: ";
+    std::cin >> destinationIndex;
 
-    cityMap.findShortestPath(sourceCode, destinationCode);
+    cityMap.findShortestPath(cityMap.getCities()[sourceIndex].code, cityMap.getCities()[destinationIndex].code);
 
     return 0;
 }
